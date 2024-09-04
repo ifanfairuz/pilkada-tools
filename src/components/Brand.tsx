@@ -1,13 +1,12 @@
 import Image from "next/image";
 import { brand } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
-import logo from "@/assets/img/LOGO.png";
 
 export default function Brand() {
   return (
     <div className="flex items-center gap-2">
       <Image
-        src={logo}
+        src="/img/logo.png"
         alt="logo"
         className="w-6 h-6"
         height={100}
