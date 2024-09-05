@@ -1,5 +1,4 @@
-import { formatDateRange, propper } from "@/lib/utils";
-import { readFileSync } from "fs";
+import { formatDateRange, getTemplate, propper } from "@/lib/utils";
 import createReport from "docx-templates";
 import { getKetua, getKorSek } from "@/db/db";
 
@@ -35,8 +34,8 @@ export async function POST(request: Request) {
     })),
   };
 
-  const template = readFileSync(
-    data.petugas.length > 1 ? "./ST.multiple.docx" : "./ST.single.docx"
+  const template = await getTemplate(
+    data.petugas.length > 1 ? "/ST.multiple.docx" : "/ST.single.docx"
   );
   const buffer = await createReport({
     template,

@@ -1,12 +1,16 @@
-import { convertTerbilang, formatDateRange, lamaPerdin } from "@/lib/utils";
-import { readFileSync } from "fs";
+import {
+  convertTerbilang,
+  formatDateRange,
+  getTemplate,
+  lamaPerdin,
+} from "@/lib/utils";
 import createReport from "docx-templates";
 import DocxMerger from "docx-merger";
 
 export const dynamic = "force-dynamic"; // defaults to auto
 export async function POST(request: Request) {
   const data: SPPDAll = await request.json();
-  const template = readFileSync("./SPPD.docx");
+  const template = await getTemplate("/SPPD.docx");
 
   const sppdAll = await Promise.all(
     data.petugas.map((p) => {

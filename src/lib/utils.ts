@@ -8,6 +8,7 @@ import {
   setDefaultOptions,
 } from "date-fns";
 import { id } from "date-fns/locale";
+import axios from "axios";
 setDefaultOptions({ locale: id });
 
 export function cn(...inputs: ClassValue[]) {
@@ -182,4 +183,17 @@ export function lamaPerdin(
   to?: string | number | Date
 ) {
   return !to || from === to ? 1 : differenceInDays(to, from) + 2;
+}
+
+export function getTemplate(url: string) {
+  return axios
+    .get(
+      (process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "http:localhost:3000") + url,
+      {
+        responseType: "arraybuffer",
+      }
+    )
+    .then((res) => Buffer.from(res.data, "binary"));
 }
