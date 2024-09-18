@@ -2,7 +2,6 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
   differenceInDays,
-  format,
   isSameMonth,
   isSameYear,
   setDefaultOptions,
@@ -10,6 +9,7 @@ import {
 import { id } from "date-fns/locale";
 import axios from "axios";
 setDefaultOptions({ locale: id });
+import { formatInTimeZone } from "date-fns-tz";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -26,16 +26,28 @@ export function propper(str: string) {
 }
 
 export function formatDateRange(from: Date, to?: Date) {
-  if (!to) return format(from, "dd MMMM yyyy");
+  if (!to) return formatInTimeZone(from, "Asia/Jakarta", "dd MMMM yyyy");
 
   let sameYear = isSameYear(from, to);
   if (isSameMonth(from, to) && sameYear) {
-    return format(from, "dd") + " s.d " + format(to, "dd MMMM yyyy");
+    return (
+      formatInTimeZone(from, "Asia/Jakarta", "dd") +
+      " s.d " +
+      formatInTimeZone(to, "Asia/Jakarta", "dd MMMM yyyy")
+    );
   } else if (sameYear) {
-    return format(from, "dd MMMM") + " s.d " + format(to, "dd MMMM yyyy");
+    return (
+      formatInTimeZone(from, "Asia/Jakarta", "dd MMMM") +
+      " s.d " +
+      formatInTimeZone(to, "Asia/Jakarta", "dd MMMM yyyy")
+    );
   }
 
-  return format(from, "dd MMMM yyyy") + " s.d " + format(to, "dd MMMM yyyy");
+  return (
+    formatInTimeZone(from, "Asia/Jakarta", "dd MMMM yyyy") +
+    " s.d " +
+    formatInTimeZone(to, "Asia/Jakarta", "dd MMMM yyyy")
+  );
 }
 
 export function download(data: any, name: string) {
