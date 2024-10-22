@@ -19,7 +19,23 @@ export function capitalize(str: string) {
   return str.at(0)?.toUpperCase() + str.substring(1).toLowerCase();
 }
 export function propper(str: string) {
-  const exclude = ["PKD", "PTPS"];
+  const exclude = [
+    "PKD",
+    "PTPS",
+    "DPT",
+    "DPTb",
+    "DPS",
+    "DPSHP",
+    "DPHP",
+    "DPK",
+    "AKP",
+    "APK",
+    "PPPS",
+    "SDMO",
+    "HPPMH",
+    "HMPP",
+    "PPMH",
+  ];
   return str
     .split(" ")
     .map((s) => (exclude.includes(s) ? s.toUpperCase() : capitalize(s)))
