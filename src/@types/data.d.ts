@@ -9,6 +9,7 @@ declare global {
     gelar: string;
     jabatan: string;
     devisi: string;
+    wilayah: string;
     tempat_lahir: string;
     tgl_lahir: string;
     jk: "L" | "P";

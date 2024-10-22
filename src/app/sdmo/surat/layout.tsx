@@ -1,4 +1,3 @@
-import SuratNav from "@/components/surat/SuratNav";
 import { PropsWithChildren } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Inbox, MessageSquare } from "lucide-react";
@@ -14,9 +13,7 @@ export default function SuratLayout({ children }: PropsWithChildren) {
         </p>
       </div>
 
-      <SuratNav />
-
-      <div className="grid grid-cols-4 gap-4">
+      <div className="lg:grid lg:grid-cols-4 gap-4">
         <div className="flex flex-col gap-2">
           <div className="border-b pb-2">
             <h3 className="font-bold">Penomoran</h3>
@@ -64,7 +61,7 @@ export default function SuratLayout({ children }: PropsWithChildren) {
           </div>
           <div className="flex flex-col gap-2"></div>
         </div>
-        <div className="col-span-3">{children}</div>
+        <div className="lg:col-span-3">{children}</div>
       </div>
     </div>
   );

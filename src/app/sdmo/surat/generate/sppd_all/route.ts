@@ -5,7 +5,7 @@ import {
   lamaPerdin,
 } from "@/lib/utils";
 import createReport from "docx-templates";
-import DocxMerger from "docx-merger";
+import JSZip from "jszip";
 
 export const dynamic = "force-dynamic"; // defaults to auto
 export async function POST(request: Request) {
@@ -13,31 +13,38 @@ export async function POST(request: Request) {
   const template = await getTemplate("/SPPD.docx");
 
   const sppdAll = await Promise.all(
-    data.petugas.map((p) => {
+    data.petugas.map(async (p, i) => {
       const d: SPPD = {
         ...data,
         petugas: p,
       };
 
-      return generate(d, template).then((res) =>
-        Buffer.from(res).toString("binary")
-      );
+      return {
+        name: `${i + 1} ${p.nama}`,
+        data: await generate(d, template),
+      };
     })
   );
 
-  const sppd = new DocxMerger({}, sppdAll);
-  const buffer = await new Promise<Buffer>((resolve) => {
-    sppd.save("nodebuffer", resolve);
-  });
-
-  return new Response(buffer, {
-    headers: {
-      "Content-Type": "application/octet-stream",
-      "Content-Disposition": 'attachment; filename="SPPD.docx"',
-      "Content-Length": `${buffer.length}`,
-    },
-    status: 200,
-  });
+  const zip = new JSZip();
+  await Promise.all(
+    sppdAll.map((sppd) =>
+      zip.file(`SPPD - ${sppd.name}.docx`, sppd.data, { binary: true })
+    )
+  );
+  return await zip
+    .generateAsync({ type: "nodebuffer", streamFiles: true })
+    .then(
+      (buffer) =>
+        new Response(buffer, {
+          headers: {
+            "Content-Type": "application/octet-stream",
+            "Content-Disposition": 'attachment; filename="SPPD.zip"',
+            "Content-Length": `${buffer.length}`,
+          },
+          status: 200,
+        })
+    );
 }
 
 async function generate(data: SPPD, template: Buffer) {

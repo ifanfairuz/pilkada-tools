@@ -19,9 +19,10 @@ export function capitalize(str: string) {
   return str.at(0)?.toUpperCase() + str.substring(1).toLowerCase();
 }
 export function propper(str: string) {
+  const exclude = ["PKD", "PTPS"];
   return str
     .split(" ")
-    .map((s) => capitalize(s))
+    .map((s) => (exclude.includes(s) ? s.toUpperCase() : capitalize(s)))
     .join(" ");
 }
 
@@ -202,7 +203,7 @@ export function getTemplate(url: string) {
     .get(
       (process.env.VERCEL_URL
         ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-        : "http:localhost:3000") + url,
+        : "http://localhost:3000") + url,
       {
         responseType: "arraybuffer",
       }

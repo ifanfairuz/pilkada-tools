@@ -1,11 +1,22 @@
 "use client";
 
-import { propper, cn, formatDateRange, download } from "@/lib/utils";
+import {
+  propper,
+  cn,
+  formatDateRange,
+  download,
+  capitalize,
+} from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import axios from "axios";
-import { CalendarIcon, DeleteIcon, PlusIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  CaseSensitiveIcon,
+  DeleteIcon,
+  PlusIcon,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -130,11 +141,42 @@ export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
         responseType: "blob",
       })
       .then((res) => {
-        download(res.data, "SPPD.docx");
+        download(res.data, "SPPD.zip");
       })
       .finally(() => {
         setLoading(false);
       });
+  };
+
+  const AddAllPanwas = () => {
+    const pkds = pegawai
+      .filter((p) => p.jenis == "panwascam")
+      .map((p) => ({
+        ...petugas,
+        nama: p.nama,
+        jabatan: p.jabatan,
+      }));
+    form.setValue("petugas", [...form.getValues().petugas, ...pkds]);
+  };
+
+  const AddAllPKD = (wilayah: boolean = false) => {
+    const pkds = pegawai
+      .filter((p) => p.jenis == "pkd")
+      .map((p) => ({
+        ...petugas,
+        nama: p.nama,
+        jabatan: propper(p.jabatan),
+        tempat: wilayah
+          ? p.wilayah
+            ? propper(p.wilayah)
+            : petugas.tempat
+          : petugas.tempat,
+      }));
+    form.setValue("petugas", [...form.getValues().petugas, ...pkds]);
+  };
+
+  const clearPetugas = () => {
+    form.setValue("petugas", []);
   };
 
   return (
@@ -238,9 +280,20 @@ export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
           render={({ field }) => (
             <FormItem className="lg:col-span-6">
               <FormLabel>Perihal</FormLabel>
-              <FormControl>
-                <Input placeholder="Perihal" {...field} />
-              </FormControl>
+              <div className="flex flex-row gap-2">
+                <FormControl>
+                  <Input placeholder="Perihal" {...field} />
+                </FormControl>
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={() =>
+                    form.setValue(field.name, capitalize(field.value))
+                  }
+                >
+                  <CaseSensitiveIcon />
+                </Button>
+              </div>
               <FormMessage />
             </FormItem>
           )}
@@ -327,13 +380,19 @@ export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
                         <CardContent className="p-2 space-y-2">
                           <div className="flex gap-2 items-center">
                             <div className="flex-1">
-                              <p className="font-medium">{v.nama}</p>
-                              <p className="text-muted-foreground text-sm">
-                                {v.jabatan}
-                                {v.date?.from
-                                  ? "- " +
-                                    formatDateRange(v.date.from, v.date?.to)
-                                  : ""}
+                              <p className="font-medium text-sm">
+                                {v.nama}
+                                <span className="ml-1 text-muted-foreground">
+                                  - {v.jabatan}
+                                </span>
+                              </p>
+                              <p className="text-muted-foreground text-sm divide-x -ml-1">
+                                <span className="px-1">
+                                  {v.date?.from
+                                    ? formatDateRange(v.date.from, v.date?.to)
+                                    : ""}
+                                </span>
+                                <span className="px-1">{v.tempat}</span>
                               </p>
                             </div>
                             <Button
@@ -347,7 +406,7 @@ export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
                             </Button>
                             <Button
                               type="button"
-                              variant="outline"
+                              variant="link"
                               className="flex h-10 pl-3 text-left font-normal"
                               onClick={() => delPetugas(i)}
                             >
@@ -358,8 +417,8 @@ export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
                       </Card>
                     ))}
                   </div>
-                  <div className="flex flex-row gap-2">
-                    <div className="flex-1 grid grid-cols-3 gap-2">
+                  <div className="flex flex-col lg:flex-row gap-2">
+                    <div className="flex-1 flex flex-col lg:flex-row gap-2">
                       <Select
                         onValueChange={(val) => {
                           let v = val.split("|");
@@ -435,15 +494,15 @@ export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
                     </div>
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="link"
                       className={cn(
                         "flex h-10 pl-3 text-left font-normal",
                         !petugas.date?.from && "text-muted-foreground"
                       )}
                       onClick={addPetugas}
                     >
+                      <PlusIcon className="mr-1 h-4 w-4 opacity-50" />
                       Add
-                      <PlusIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
                   </div>
                 </div>
@@ -453,18 +512,61 @@ export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
           )}
         />
 
-        <div className="lg:col-span-6 mt-4 space-x-2">
-          <Button type="submit" loading={loading}>
-            Surat Tugas
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={generateSPPDAll}
-            loading={loading}
-          >
-            SPPD All
-          </Button>
+        <div className="lg:col-span-6 mt-4 flex flex-col lg:flex-row justify-between gap-4">
+          <div className="inline-block divide-x">
+            <Button
+              type="button"
+              variant="link"
+              onClick={AddAllPanwas}
+              loading={loading}
+            >
+              <PlusIcon className="mr-1 h-4 w-4 opacity-50" />
+              Panwas
+            </Button>
+            <Button
+              type="button"
+              variant="link"
+              onClick={() => {
+                AddAllPKD();
+              }}
+              loading={loading}
+            >
+              <PlusIcon className="mr-1 h-4 w-4 opacity-50" />
+              PKD Tempat Sama
+            </Button>
+            <Button
+              type="button"
+              variant="link"
+              onClick={() => {
+                AddAllPKD(true);
+              }}
+              loading={loading}
+            >
+              <PlusIcon className="mr-1 h-4 w-4 opacity-50" />
+              PKD Tempat Masing2
+            </Button>
+            <Button
+              type="button"
+              variant="link"
+              onClick={clearPetugas}
+              loading={loading}
+            >
+              Clear
+            </Button>
+          </div>
+          <div className="flex space-x-2 lg:order-first">
+            <Button type="submit" loading={loading}>
+              Surat Tugas
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={generateSPPDAll}
+              loading={loading}
+            >
+              SPPD All
+            </Button>
+          </div>
         </div>
       </form>
     </Form>
