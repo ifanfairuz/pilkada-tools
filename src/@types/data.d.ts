@@ -26,6 +26,12 @@ declare global {
     tahun_lulus_pendidikan: number;
   }
 
+  interface PPK {
+    no: number;
+    nama: string;
+    nip: string;
+  }
+
   interface SuratTugas {
     nomor: string;
     otoritas: "K.JI" | "JI";
@@ -40,6 +46,7 @@ declare global {
     petugas: (Pick<Pegawai, "nama" | "jabatan"> & {
       date: DateRange;
       tempat: string;
+      asal: string;
     })[];
   }
 
@@ -70,18 +77,15 @@ declare global {
         from: Date;
         to?: Date;
       };
+      asal: string;
       tempat: string;
     };
+    nama_ppk: PPK["nama"];
+    nip_ppk: PPK["nip"];
   }
 
-  interface SPPDAll extends Omit<SuratTugas, "petugas"> {
-    petugas: (Pick<Pegawai, "nama" | "jabatan"> & {
-      date: {
-        from: Date;
-        to?: Date;
-      };
-      tempat: string;
-    })[];
+  interface SPPDAll extends Omit<SPPD, "petugas"> {
+    petugas: SPPD["petugas"][];
   }
 
   interface SPPDData {
@@ -92,6 +96,9 @@ declare global {
     tanggal_awal_dinas: string;
     tanggal_akhir_dinas: string;
     tempat: string;
+    asal: string;
+    nama_ppk: string;
+    nip_ppk: string;
     lama_dinas: string;
   }
 }

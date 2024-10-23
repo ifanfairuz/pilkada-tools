@@ -3,6 +3,7 @@ import { db } from "@/db/db";
 
 export default function Surat() {
   const pegawai = db.data.anggota;
+  const ppk = db.data.ppk;
   return (
     <div className="flex flex-col gap-2">
       <div className="border-b pb-2 flex items-center">
@@ -14,7 +15,7 @@ export default function Surat() {
         </div>
       </div>
       <div className="flex flex-col flex-1 gap-2">
-        <FormSuratTugas pegawai={pegawai} />
+        <FormSuratTugas pegawai={pegawai} ppk={ppk} />
       </div>
     </div>
   );

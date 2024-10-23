@@ -35,10 +35,13 @@ export function propper(str: string) {
     "HPPMH",
     "HMPP",
     "PPMH",
+    "KPPS",
   ];
   return str
     .split(" ")
-    .map((s) => (exclude.includes(s) ? s.toUpperCase() : capitalize(s)))
+    .map((s) =>
+      exclude.includes(s.toUpperCase()) ? s.toUpperCase() : capitalize(s)
+    )
     .join(" ");
 }
 

@@ -27,6 +27,9 @@ export async function POST(request: Request) {
     tanggal_awal_dinas,
     tanggal_akhir_dinas,
     tempat: data.petugas.tempat,
+    asal: data.petugas.asal,
+    nama_ppk: data.nama_ppk,
+    nip_ppk: data.nip_ppk,
     lama_dinas: `${lama} (${convertTerbilang(lama).toLowerCase()}) hari`,
   };
 

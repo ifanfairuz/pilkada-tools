@@ -23,3 +23,6 @@ export const getKetua = cache(() => {
 export const getKorSek = cache(() => {
   return db.data.anggota.find((a) => a.jabatan === "KEPALA SEKRETARIAT")!;
 });
+export const getPPK = cache(() => {
+  return db.data.ppk;
+});

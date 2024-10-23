@@ -1,17 +1,12 @@
 "use client";
 
-import {
-  propper,
-  cn,
-  formatDateRange,
-  download,
-  capitalize,
-} from "@/lib/utils";
+import { propper, cn, formatDateRange, download } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import axios from "axios";
 import {
+  ArrowLeftRightIcon,
   CalendarIcon,
   CaseSensitiveIcon,
   DeleteIcon,
@@ -47,6 +42,10 @@ import { useState } from "react";
 const formSchema = z.object({
   nomor: z.string(),
   otoritas: z.enum(["K.JI", "JI"]),
+  ppk: z.object({
+    nama: z.string(),
+    nip: z.string(),
+  }),
   date_create: z.date(),
   undangan: z.string(),
   perihal: z.string(),
@@ -61,6 +60,7 @@ const formSchema = z.object({
         nama: z.string(),
         jabatan: z.string(),
         tempat: z.string(),
+        asal: z.string(),
         date: z.object({
           from: z.date(),
           to: z.optional(z.date()),
@@ -70,14 +70,24 @@ const formSchema = z.object({
     .min(1),
 });
 
-export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
-  const form = useForm<SuratTugas>({
+export function FormSuratTugas({
+  pegawai,
+  ppk,
+}: {
+  pegawai: Pegawai[];
+  ppk: PPK[];
+}) {
+  const form = useForm<SuratTugas & { ppk: Pick<PPK, "nama" | "nip"> }>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       petugas: [],
       date_create: new Date(),
       date: {
         from: new Date(),
+      },
+      ppk: {
+        nama: ppk[1].nama,
+        nip: ppk[1].nip,
       },
     },
   });
@@ -86,6 +96,7 @@ export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
     jabatan: "",
     date: form.getValues().date,
     tempat: "",
+    asal: "Kantor Panwaslu Kecamatan Prigen",
   });
 
   const addPetugas = () => {
@@ -119,7 +130,12 @@ export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
     axios
       .post(
         "/sdmo/surat/generate/sppd",
-        { ...data, petugas: data.petugas[i] },
+        {
+          ...data,
+          petugas: data.petugas[i],
+          nama_ppk: data.ppk.nama,
+          nip_ppk: data.ppk.nip,
+        },
         {
           responseType: "blob",
         }
@@ -137,9 +153,13 @@ export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
 
     const data = form.getValues();
     axios
-      .post("/sdmo/surat/generate/sppd_all", data, {
-        responseType: "blob",
-      })
+      .post(
+        "/sdmo/surat/generate/sppd_all",
+        { ...data, nama_ppk: data.ppk.nama, nip_ppk: data.ppk.nip },
+        {
+          responseType: "blob",
+        }
+      )
       .then((res) => {
         download(res.data, "SPPD.zip");
       })
@@ -159,19 +179,28 @@ export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
     form.setValue("petugas", [...form.getValues().petugas, ...pkds]);
   };
 
-  const AddAllPKD = (wilayah: boolean = false) => {
+  const AddAllPKD = (flag: "tempat" | "asal" | boolean = false) => {
     const pkds = pegawai
       .filter((p) => p.jenis == "pkd")
-      .map((p) => ({
-        ...petugas,
-        nama: p.nama,
-        jabatan: propper(p.jabatan),
-        tempat: wilayah
-          ? p.wilayah
-            ? propper(p.wilayah)
-            : petugas.tempat
-          : petugas.tempat,
-      }));
+      .map((p) => {
+        let tempat = petugas.tempat;
+        let asal = petugas.asal;
+
+        if (flag == "tempat") {
+          asal = propper(p.wilayah);
+        } else if (flag == "asal") {
+          tempat = propper(p.wilayah);
+        }
+
+        return {
+          ...petugas,
+          nama: p.nama,
+          jabatan: propper(p.jabatan),
+          tempat,
+          asal,
+        };
+      });
+
     form.setValue("petugas", [...form.getValues().petugas, ...pkds]);
   };
 
@@ -288,7 +317,7 @@ export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
                   type="button"
                   variant="link"
                   onClick={() =>
-                    form.setValue(field.name, capitalize(field.value))
+                    form.setValue(field.name, propper(field.value))
                   }
                 >
                   <CaseSensitiveIcon />
@@ -365,6 +394,37 @@ export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
 
         <FormField
           control={form.control}
+          name="ppk"
+          render={({ field }) => (
+            <FormItem className="lg:col-span-3">
+              <FormLabel>Pejabat Pembuat Komitmen</FormLabel>
+              <Select
+                value={`${field.value.nama}|${field.value.nip}`}
+                onValueChange={(val) => {
+                  let v = val.split("|");
+                  form.setValue(field.name, { nama: v[0], nip: v[1] });
+                }}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select PPK" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {ppk.map((p) => (
+                    <SelectItem key={`${p.no}`} value={`${p.nama}|${p.nip}`}>
+                      {p.nama}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="petugas"
           render={({ field }) => (
             <FormItem className="lg:col-span-6">
@@ -392,7 +452,9 @@ export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
                                     ? formatDateRange(v.date.from, v.date?.to)
                                     : ""}
                                 </span>
-                                <span className="px-1">{v.tempat}</span>
+                                <span className="px-1">
+                                  {v.asal + " -> " + v.tempat}
+                                </span>
                               </p>
                             </div>
                             <Button
@@ -482,7 +544,36 @@ export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
                       </Popover>
 
                       <Input
-                        placeholder="Tempat"
+                        placeholder="Berangkat dari"
+                        value={petugas.asal}
+                        onChange={(v) =>
+                          setPetugas((p: any) => ({
+                            ...p,
+                            asal: v.target.value,
+                          }))
+                        }
+                      />
+
+                      <Button
+                        type="button"
+                        variant="link"
+                        className={cn(
+                          "flex h-10 pl-3 text-left font-normal",
+                          !petugas.date?.from && "text-muted-foreground"
+                        )}
+                        onClick={() => {
+                          setPetugas((p: any) => ({
+                            ...p,
+                            tempat: p.asal,
+                            asal: p.tempat,
+                          }));
+                        }}
+                      >
+                        <ArrowLeftRightIcon className="mr-1 h-4 w-4" />
+                      </Button>
+
+                      <Input
+                        placeholder="Tempat tugas"
                         value={petugas.tempat}
                         onChange={(v) =>
                           setPetugas((p: any) => ({
@@ -532,18 +623,29 @@ export function FormSuratTugas({ pegawai }: { pegawai: Pegawai[] }) {
               loading={loading}
             >
               <PlusIcon className="mr-1 h-4 w-4 opacity-50" />
-              PKD Tempat Sama
+              PKD
             </Button>
             <Button
               type="button"
               variant="link"
               onClick={() => {
-                AddAllPKD(true);
+                AddAllPKD("tempat");
               }}
               loading={loading}
             >
               <PlusIcon className="mr-1 h-4 w-4 opacity-50" />
-              PKD Tempat Masing2
+              PKD Wilayah {"->"} Tempat
+            </Button>
+            <Button
+              type="button"
+              variant="link"
+              onClick={() => {
+                AddAllPKD("asal");
+              }}
+              loading={loading}
+            >
+              <PlusIcon className="mr-1 h-4 w-4 opacity-50" />
+              PKD Berangkat {"->"} Wilayah
             </Button>
             <Button
               type="button"

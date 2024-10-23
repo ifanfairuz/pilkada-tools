@@ -571,5 +571,17 @@
       "pendidikan": "SMA",
       "tahun_lulus_pendidikan": 1985
     }
+  ],
+  "ppk": [
+    {
+      "no": 1,
+      "nama": "ALFAN WAHYUDI, SE",
+      "nip": "19780906 200901 1 007"
+    },
+    {
+      "no": 2,
+      "nama": "PRISMA AGUSTIAN PRASETYA W, SE",
+      "nip": "19850824 201902 1 002"
+    }
   ]
 }
